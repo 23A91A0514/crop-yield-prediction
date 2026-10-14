@@ -1,0 +1,307 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crop Yield Prediction</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 28px;
+      font-family: Arial, sans-serif;
+      background: #f4f7f5;
+      color: #17212b;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: auto;
+    }
+
+    header {
+      background: #174d37;
+      color: white;
+      padding: 24px;
+      border-radius: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+    }
+
+    .muted {
+      color: #66756d;
+      font-size: .92rem;
+    }
+
+    header .muted {
+      color: #d8e7dd;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid #e0e8e2;
+      border-radius: 14px;
+      padding: 22px;
+      margin-top: 18px;
+    }
+
+    .grid,
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #cbd7cf;
+      border-radius: 8px;
+      background: white;
+    }
+
+    button {
+      background: #176343;
+      color: white;
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 18px;
+    }
+
+    button:hover {
+      background: #104d33;
+    }
+
+    .cards {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid #dfe8e1;
+      border-radius: 10px;
+      padding: 14px;
+      background: #fbfdfb;
+    }
+
+    .big {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+
+    .error {
+      background: #fff1f0;
+      color: #9a251d;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 650px) {
+      body {
+        padding: 12px;
+      }
+
+      .grid,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header>
+      <h1>Crop Yield Prediction</h1>
+      <div class="muted">
+        Rice &amp; Maize · State-wise machine-learning estimates ·
+        tonnes per hectare
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2>Enter crop details</h2>
+
+      <form method="post">
+        <div class="grid">
+
+          <!-- State -->
+          <div>
+            <label for="state">State</label>
+            <select id="state" name="state" required>
+              <option value="">Select state</option>
+
+              {% for s in meta.states %}
+              <option value="{{ s }}"
+                {% if form.state == s %}selected{% endif %}>
+                {{ s }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- NEW: District -->
+          <div>
+            <label for="district">District</label>
+            <select id="district" name="district" required>
+              <option value="">Select district</option>
+
+              {% for d in districts %}
+              <option value="{{ d }}"
+                {% if form.district == d %}selected{% endif %}>
+                {{ d }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Crop -->
+          <div>
+            <label for="crop">Crop</label>
+            <select id="crop" name="crop" required>
+              {% for c in meta.crops %}
+              <option value="{{ c }}"
+                {% if form.crop == c %}selected{% endif %}>
+                {{ c }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Season -->
+          <div>
+            <label for="season">Season</label>
+            <select id="season" name="season" required>
+              {% for s in meta.seasons %}
+              <option value="{{ s }}"
+                {% if form.season == s %}selected{% endif %}>
+                {{ s }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Crop year -->
+          <div>
+            <label for="year">Crop year</label>
+            <input
+              id="year"
+              name="year"
+              type="number"
+              min="1997"
+              max="2035"
+              value="{{ form.year }}"
+              required
+            >
+          </div>
+
+          <!-- Cultivated area -->
+          <div>
+            <label for="area">Cultivated area (hectares)</label>
+            <input
+              id="area"
+              name="area"
+              type="number"
+              min="0.01"
+              step="any"
+              value="{{ form.area }}"
+              required
+            >
+          </div>
+
+        </div>
+
+        <button type="submit">Predict yield</button>
+      </form>
+
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+    </section>
+
+    <!-- Prediction results -->
+    {% if result %}
+    <section class="panel">
+      <h2>Prediction results</h2>
+
+      <p class="muted">
+        Default estimate uses XGBoost. Model estimates are experimental
+        and depend on the quality of the historical training data.
+      </p>
+
+      <div class="cards">
+
+        <div class="card">
+          <div class="muted">Predicted yield</div>
+          <div class="big">
+            {{ "%.3f"|format(result.yield) }}
+          </div>
+          <div>tonnes/hectare</div>
+        </div>
+
+        <div class="card">
+          <div class="muted">Estimated production</div>
+          <div class="big">
+            {{ "%.2f"|format(result.production) }}
+          </div>
+          <div>tonnes for entered area</div>
+        </div>
+
+        <div class="card">
+          <div class="muted">Cultivated area</div>
+          <div class="big">
+            {{ "%.2f"|format(result.area) }}
+          </div>
+          <div>hectares</div>
+        </div>
+
+      </div>
+
+      <h3>Compare all models</h3>
+
+      <div class="cards">
+        {% for name, val in result.predictions.items() %}
+        <div class="card">
+          <strong>{{ name }}</strong>
+          <div class="big">{{ "%.3f"|format(val) }}</div>
+          <div>tonnes/hectare</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <p class="muted">
+        Historical-data estimate only, not a guaranteed harvest prediction.
+        This version has no rainfall or temperature inputs.
+      </p>
+    </section>
+    {% endif %}
+
+    <section class="panel">
+      <strong>Note:</strong>
+      Predictions for years after 2022 are extrapolations from historical
+      data. Treat them as experimental estimates, not official agricultural
+      advice.
+    </section>
+
+  </div>
+</body>
+</html>
