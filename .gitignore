@@ -1,6 +1,6 @@
-@"
 .venv/
 __pycache__/
 *.py[cod]
 .env
-"@ | Set-Content .gitignore
+*.zip
+.DS_Store

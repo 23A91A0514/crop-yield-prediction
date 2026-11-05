@@ -1,33 +1,118 @@
-# Crop Yield Prediction: Rice and Maize
+# All-India Crop Yield Prediction (37 Crops) with Automatic Weather Lookup
 
-## Included
-- Flask web interface with a state dropdown, crop, season, year, and cultivated area
-- Trained Gradient Boosting, XGBoost, and Random Forest models
-- Filtered training CSV and model comparison report
+This project provides an interactive Flask web application that predicts crop yields (in tonnes per hectare) and total estimated production for **37 major Indian crops** across Indian states and seasons. It integrates machine-learning models (XGBoost, Random Forest, and Gradient Boosting) with an **automatic historical weather lookup** system.
 
-## Dataset preparation
-- Original cleaned dataset contained 49,079 Rice/Maize rows.
-- Training dataset contains 49,062 rows from 1997–2022.
-- 17 records were excluded due to non-positive area or yield outside 0–15 tonnes/hectare. This is a simple cleaning rule; review outliers before production use.
-- Target: `Yield` in tonnes/hectare. Input features: state, crop, season, crop year, area.
-- The supplied data has no weather columns; no pesticide data is used.
+---
 
-## Holdout test
-Trained on years through 2019 and tested on 2020–2022. Lower MAE/RMSE is better. XGBoost had the lowest RMSE in this test run.
+## Supported Crops (37 Crops)
+The application supports comprehensive yield and production forecasting for all major Indian crop categories:
+- **Cereals & Foodgrains**: Rice, Wheat, Maize, Bajra, Barley, Jowar, Ragi, Small Millets, Cereals, Nutri/Coarse Cereals, Shree Anna / Nutri Cereals, Total Food Grains
+- **Pulses**: Gram, Tur (Arhar), Moong, Urad, Lentil, Other Pulses, Total Pulses
+- **Commercial & Cash Crops**: Sugarcane, Cotton, Tobacco, Jute, Mesta, Jute & Mesta, Sannhemp
+- **Oilseeds**: Groundnut, Soybean, Sunflower, Rapeseed & Mustard, Sesamum, Castorseed, Linseed, Nigerseed, Safflower, Guarseed, Total Oil Seeds
 
-            Model  Train rows  Test rows      MAE     RMSE       R2
-Gradient Boosting       42062       7000 0.774979 1.170749 0.384522
-          XGBoost       42062       7000 0.641155 0.928062 0.613242
-    Random Forest       42062       7000 0.639664 0.930532 0.611181
+---
 
-## Run on Windows
-1. Extract this ZIP.
-2. Open Command Prompt in the extracted folder.
-3. Run `py -m venv .venv`
-4. Run `.venv\Scripts\activate`
-5. Run `pip install -r requirements.txt`
-6. Run `python app.py`
-7. Open `http://127.0.0.1:5000` in your browser.
+## Key Features
 
-## Limitations
-The dataset is historical and district-level records are aggregated in the app's feature set. Future-year predictions are extrapolations. Predictions are estimates, not guarantees. Validate with newer data before practical use.
+1. **Automatic Weather Lookup**:
+   - Historical temperature and rainfall data (1969–2024) are automatically looked up from `state_year_weather_lookup.csv` using the user's selected state and crop year.
+   - Users do not need to manually input complex weather variables.
+   - For future or unrecorded years (extrapolations), missing weather values are automatically imputed by the trained model pipeline.
+
+2. **Multi-Model Comparison & Automatic Selection**:
+   - Evaluates three machine learning algorithms: **XGBoost**, **Random Forest**, and **Gradient Boosting**.
+   - Utilizes `TransformedTargetRegressor` with log-target transformation to accurately balance high-yield crops (e.g. Sugarcane ~70–80 t/ha) alongside standard grains and low-yield pulses/cotton (~0.4–3.5 t/ha).
+   - XGBoost serves as the primary best model with high precision across distinct crops ($R^2 \approx 0.916$, $\text{MAE} \approx 0.481$).
+   - Displays comparative predictions from all three models simultaneously.
+
+3. **Interactive Web Interface**:
+   - Dynamic state-dependent district selection.
+   - Clean, responsive dashboard displaying predicted yield (tonnes/ha), total estimated production (tonnes), cultivated area, model evaluation metrics, and weather lookup status.
+
+---
+
+## File Structure
+
+```text
+crop_yield_prediction_project/
+├── app.py                                # Main Flask web application
+├── predict_helper.py                     # Standalone Python inference helper
+├── train_models.py                       # Model training and evaluation script
+├── test_app.py                           # Automated test suite
+├── requirements.txt                      # Python dependencies
+├── metadata.json                         # Feature configuration, 37 crops, states, districts, and model info
+├── model_comparison.csv                  # Model evaluation metrics (R2, MAE, RMSE)
+├── model_evaluation_results.csv          # Evaluation results backup
+├── state_year_weather_lookup.csv         # Aggregated historical state-year weather dataset
+├── weather_features_by_district_year.csv # District-year weather dataset
+├── training_data_with_weather.csv        # Joined training dataset with weather features (209k rows)
+├── crop_clean.csv                        # Cleaned historical crop dataset
+├── rice_maize_training_data.csv          # Legacy dataset
+├── models/
+│   ├── xgboost.joblib                    # Fitted XGBoost pipeline (Primary best model)
+│   ├── random_forest.joblib              # Fitted Random Forest pipeline
+│   └── gradient_boosting.joblib          # Fitted Gradient Boosting pipeline
+└── templates/
+    └── index.html                        # Web UI template with dynamic forms and dashboard
+```
+
+---
+
+## How to Run the Application
+
+### 1. Prerequisites
+Ensure you have Python 3.10+ installed.
+
+### 2. Set Up a Virtual Environment (Optional but Recommended)
+In Command Prompt / PowerShell inside the project directory:
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Start the Flask App
+```bash
+python app.py
+```
+
+### 5. Open in Your Browser
+Navigate to:
+```text
+http://127.0.0.1:5000
+```
+
+---
+
+## Standalone Inference via Python
+You can also run batch predictions or embed the models directly into custom scripts via `predict_helper.py`:
+
+```python
+from predict_helper import predict_yield
+
+# Example 1: Predict yield for Sugarcane in Uttar Pradesh (10.0 hectares)
+yield_sugar = predict_yield(
+    state="Uttar Pradesh",
+    crop="Sugarcane",
+    season="Whole Year",
+    year=2020,
+    area=10.0
+)
+print(f"Predicted Sugarcane Yield: {yield_sugar:.3f} tonnes/ha (Production: {yield_sugar * 10.0:.2f} tonnes)")
+
+# Example 2: Predict yield for Cotton in Gujarat (5.0 hectares)
+yield_cotton = predict_yield(
+    state="Gujarat",
+    crop="Cotton",
+    season="Kharif",
+    year=2020,
+    area=5.0
+)
+print(f"Predicted Cotton Yield: {yield_cotton:.3f} tonnes/ha (Production: {yield_cotton * 5.0:.2f} tonnes)")
+```
+Weather features are automatically retrieved from the historical weather lookup table behind the scenes.

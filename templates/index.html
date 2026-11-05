@@ -1,307 +1,187 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Crop Yield Prediction</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 28px;
-      font-family: Arial, sans-serif;
-      background: #f4f7f5;
-      color: #17212b;
-    }
-
-    .wrap {
-      max-width: 960px;
-      margin: auto;
-    }
-
-    header {
-      background: #174d37;
-      color: white;
-      padding: 24px;
-      border-radius: 16px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-    }
-
-    .muted {
-      color: #66756d;
-      font-size: .92rem;
-    }
-
-    header .muted {
-      color: #d8e7dd;
-    }
-
-    .panel {
-      background: white;
-      border: 1px solid #e0e8e2;
-      border-radius: 14px;
-      padding: 22px;
-      margin-top: 18px;
-    }
-
-    .grid,
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #cbd7cf;
-      border-radius: 8px;
-      background: white;
-    }
-
-    button {
-      background: #176343;
-      color: white;
-      border: 0;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 18px;
-    }
-
-    button:hover {
-      background: #104d33;
-    }
-
-    .cards {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .card {
-      border: 1px solid #dfe8e1;
-      border-radius: 10px;
-      padding: 14px;
-      background: #fbfdfb;
-    }
-
-    .big {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 8px 0;
-    }
-
-    .error {
-      background: #fff1f0;
-      color: #9a251d;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 650px) {
-      body {
-        padding: 12px;
-      }
-
-      .grid,
-      .cards {
-        grid-template-columns: 1fr;
-      }
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; font-family: Arial, sans-serif; background: #f4f7f5; color: #17212b; }
+    .wrap { max-width: 1020px; margin: auto; }
+    header { background: #174d37; color: white; padding: 24px; border-radius: 16px; }
+    h1 { margin: 0 0 8px; }
+    .muted { color: #66756d; font-size: .92rem; line-height: 1.5; }
+    header .muted { color: #d8e7dd; }
+    .panel { background: white; border: 1px solid #e0e8e2; border-radius: 14px; padding: 22px; margin-top: 18px; }
+    .grid, .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 11px; border: 1px solid #cbd7cf; border-radius: 8px; background: white; }
+    button { background: #176343; color: white; border: 0; padding: 12px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 18px; }
+    button:hover { background: #104d33; }
+    .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { border: 1px solid #dfe8e1; border-radius: 10px; padding: 14px; background: #fbfdfb; min-width: 0; }
+    .big { font-size: 1.5rem; font-weight: 700; margin: 8px 0; overflow-wrap: anywhere; }
+    .error { background: #fff1f0; color: #9a251d; padding: 12px; border-radius: 8px; margin-top: 12px; }
+    .badge { display: inline-block; background: #e0f3e7; color: #174d37; padding: 5px 9px; border-radius: 20px; font-size: .85rem; font-weight: 700; }
+    .badge-weather { display: inline-block; background: #e8f4fd; color: #0c5460; padding: 4px 8px; border-radius: 6px; font-size: .85rem; font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 11px; border-bottom: 1px solid #e4ebe6; }
+    th { background: #edf5ef; }
+    tr.best-row { background: #f0faf3; font-weight: 600; }
+    .weather-box { background: #f2f8f5; border: 1px solid #cce5d7; padding: 14px; border-radius: 8px; margin-bottom: 18px; }
+    .weather-box-imputed { background: #fdfaf2; border: 1px solid #f2e2be; padding: 14px; border-radius: 8px; margin-bottom: 18px; }
+    @media (max-width: 650px) { body { padding: 12px; } .grid, .cards { grid-template-columns: 1fr; } .panel { padding: 16px; } }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-
     <header>
       <h1>Crop Yield Prediction</h1>
-      <div class="muted">
-        Rice &amp; Maize · State-wise machine-learning estimates ·
-        tonnes per hectare
-      </div>
+      <div class="muted">All-India Crop Yield Prediction (37 Crops) · Automatic historical weather lookup · Machine learning estimates in tonnes per hectare</div>
     </header>
 
     <section class="panel">
       <h2>Enter crop details</h2>
-
       <form method="post">
         <div class="grid">
-
-          <!-- State -->
           <div>
             <label for="state">State</label>
             <select id="state" name="state" required>
               <option value="">Select state</option>
-
               {% for s in meta.states %}
-              <option value="{{ s }}"
-                {% if form.state == s %}selected{% endif %}>
-                {{ s }}
-              </option>
+              <option value="{{ s }}" {% if form.state == s %}selected{% endif %}>{{ s }}</option>
               {% endfor %}
             </select>
           </div>
-
-          <!-- NEW: District -->
           <div>
             <label for="district">District</label>
             <select id="district" name="district" required>
               <option value="">Select district</option>
-
               {% for d in districts %}
-              <option value="{{ d }}"
-                {% if form.district == d %}selected{% endif %}>
-                {{ d }}
-              </option>
+              <option value="{{ d }}" {% if form.district == d %}selected{% endif %}>{{ d }}</option>
               {% endfor %}
             </select>
           </div>
-
-          <!-- Crop -->
           <div>
             <label for="crop">Crop</label>
             <select id="crop" name="crop" required>
               {% for c in meta.crops %}
-              <option value="{{ c }}"
-                {% if form.crop == c %}selected{% endif %}>
-                {{ c }}
-              </option>
+              <option value="{{ c }}" {% if form.crop == c %}selected{% endif %}>{{ c }}</option>
               {% endfor %}
             </select>
           </div>
-
-          <!-- Season -->
           <div>
             <label for="season">Season</label>
             <select id="season" name="season" required>
               {% for s in meta.seasons %}
-              <option value="{{ s }}"
-                {% if form.season == s %}selected{% endif %}>
-                {{ s }}
-              </option>
+              <option value="{{ s }}" {% if form.season == s %}selected{% endif %}>{{ s }}</option>
               {% endfor %}
             </select>
           </div>
-
-          <!-- Crop year -->
           <div>
             <label for="year">Crop year</label>
-            <input
-              id="year"
-              name="year"
-              type="number"
-              min="1997"
-              max="2035"
-              value="{{ form.year }}"
-              required
-            >
+            <input id="year" name="year" type="number" min="1960" max="2035" value="{{ form.year }}" required>
           </div>
-
-          <!-- Cultivated area -->
           <div>
             <label for="area">Cultivated area (hectares)</label>
-            <input
-              id="area"
-              name="area"
-              type="number"
-              min="0.01"
-              step="any"
-              value="{{ form.area }}"
-              required
-            >
+            <input id="area" name="area" type="number" min="0.01" step="any" value="{{ form.area }}" required>
           </div>
-
         </div>
-
         <button type="submit">Predict yield</button>
       </form>
-
-      {% if error %}
-      <div class="error">{{ error }}</div>
-      {% endif %}
+      {% if error %}<div class="error">{{ error }}</div>{% endif %}
     </section>
 
-    <!-- Prediction results -->
     {% if result %}
     <section class="panel">
       <h2>Prediction results</h2>
 
-      <p class="muted">
-        Default estimate uses XGBoost. Model estimates are experimental
-        and depend on the quality of the historical training data.
-      </p>
+      {% if result.weather_found and result.weather_summary %}
+      <div class="weather-box">
+        <strong style="color: #174d37;">&#x2714; Automatic Weather Lookup Applied</strong>
+        <div class="muted" style="color: #2b543d; margin-top: 4px;">
+          Retrieved historical climate records for <strong>{{ form.state }} ({{ form.year }})</strong>:
+          {% if result.weather_summary.avg_max_temp is not none %} Avg Max Temp: <strong>{{ result.weather_summary.avg_max_temp }}&deg;C</strong> |{% endif %}
+          {% if result.weather_summary.avg_min_temp is not none %} Avg Min Temp: <strong>{{ result.weather_summary.avg_min_temp }}&deg;C</strong> |{% endif %}
+          {% if result.weather_summary.rainfall_annual is not none %} Annual Rainfall: <strong>{{ result.weather_summary.rainfall_annual }} mm</strong>{% endif %}
+        </div>
+      </div>
+      {% elif not result.weather_found %}
+      <div class="weather-box-imputed">
+        <strong style="color: #7d5a00;">&#x2139; Automatic Weather Lookup (Imputed)</strong>
+        <div class="muted" style="color: #7d5a00; margin-top: 4px;">
+          No exact historical weather record was found for <strong>{{ form.state }} in {{ form.year }}</strong>. Missing weather features were automatically imputed by the trained model pipeline.
+        </div>
+      </div>
+      {% endif %}
 
+      <p><span class="badge">Automatically selected model: {{ result.selected }}</span></p>
+      <p class="muted">The selected model is chosen using validation metrics: highest R², then lower RMSE and MAE to break ties.</p>
       <div class="cards">
-
-        <div class="card">
-          <div class="muted">Predicted yield</div>
-          <div class="big">
-            {{ "%.3f"|format(result.yield) }}
-          </div>
-          <div>tonnes/hectare</div>
-        </div>
-
-        <div class="card">
-          <div class="muted">Estimated production</div>
-          <div class="big">
-            {{ "%.2f"|format(result.production) }}
-          </div>
-          <div>tonnes for entered area</div>
-        </div>
-
-        <div class="card">
-          <div class="muted">Cultivated area</div>
-          <div class="big">
-            {{ "%.2f"|format(result.area) }}
-          </div>
-          <div>hectares</div>
-        </div>
-
+        <div class="card"><div class="muted">Predicted yield</div><div class="big">{{ "%.3f"|format(result.yield) }}</div><div>tonnes/hectare</div></div>
+        <div class="card"><div class="muted">Estimated production</div><div class="big">{{ "%.2f"|format(result.production) }}</div><div>tonnes for entered area</div></div>
+        <div class="card"><div class="muted">Cultivated area</div><div class="big">{{ "%.2f"|format(result.area) }}</div><div>hectares</div></div>
       </div>
 
-      <h3>Compare all models</h3>
-
+      <h3 style="margin-top: 24px;">Compare predictions from all models</h3>
       <div class="cards">
         {% for name, val in result.predictions.items() %}
         <div class="card">
           <strong>{{ name }}</strong>
-          <div class="big">{{ "%.3f"|format(val) }}</div>
-          <div>tonnes/hectare</div>
+          {% if name == result.selected %}<p><span class="badge">Selected</span></p>{% endif %}
+          <div class="big">{{ "%.3f"|format(val) }}</div><div>tonnes/hectare</div>
         </div>
         {% endfor %}
       </div>
-
-      <p class="muted">
-        Historical-data estimate only, not a guaranteed harvest prediction.
-        This version has no rainfall or temperature inputs.
-      </p>
+      <p class="muted">Estimates powered by machine-learning models trained with automatic historical weather features (temperature and rainfall).</p>
     </section>
     {% endif %}
 
     <section class="panel">
-      <strong>Note:</strong>
-      Predictions for years after 2022 are extrapolations from historical
-      data. Treat them as experimental estimates, not official agricultural
-      advice.
+      <h2>Model evaluation dashboard</h2>
+      <p class="muted">Validation metrics from model_comparison.csv. Lower MAE/RMSE and higher R² generally indicate better performance.</p>
+      {% if comparison_rows %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>R²</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in comparison_rows %}
+            <tr class="{% if row.model|lower == selected_model|lower %}best-row{% endif %}">
+              <td>{{ row.model }}</td><td>{{ "%.3f"|format(row.mae) }}</td><td>{{ "%.3f"|format(row.rmse) }}</td><td>{{ "%.3f"|format(row.r2) }}</td>
+              <td>{% if row.model|lower == selected_model|lower %}Selected{% else %}Compared{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No evaluation metrics found. Run the training script to create model_comparison.csv.</p>
+      {% endif %}
     </section>
 
+    <section class="panel">
+      <strong>Note:</strong>
+      <p class="muted">Predictions for future or unobserved years use model imputation for weather features and are extrapolations from historical patterns. Treat them as experimental estimates, not official agricultural advice.</p>
+    </section>
   </div>
+
+  <script>
+    const districtsByState = {{ meta.districts_by_state | tojson }};
+    const stateSelect = document.getElementById("state");
+    const districtSelect = document.getElementById("district");
+    stateSelect.addEventListener("change", function () {
+      const previousDistrict = districtSelect.value;
+      const options = districtsByState[this.value] || [];
+      districtSelect.innerHTML = '<option value="">Select district</option>';
+      options.forEach(function (district) {
+        const option = document.createElement("option");
+        option.value = district;
+        option.textContent = district;
+        if (district === previousDistrict) option.selected = true;
+        districtSelect.appendChild(option);
+      });
+    });
+  </script>
 </body>
 </html>
